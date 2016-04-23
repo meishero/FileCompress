@@ -2,6 +2,7 @@
 #include"Heap.h"
 #include"HuffmanTree.h"
 #include"FileCompress.h"
+#include"FileUncompress.h"
 
 using namespace std;
 
@@ -11,17 +12,21 @@ void testHuffmanHeap()
 	HuffmanTree<int> h1(array, 8);
 	h1.PrevOrder();
 }
-void testFilecompressStep12()
+void testFilecompress()
 {
 	FileCompress f1;
 	f1.Compress("abc.txt");
+}
+void testFileUncompress()
+{
+	FileUncompress f2;
+	f2.Uncompress("abc.config");
 }
 
 int main()
 {
 	//testHuffmanHeap();
-	testFilecompressStep12();
-
-
+	testFilecompress();
+	testFileUncompress();
 	return 0;
 }

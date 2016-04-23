@@ -1,3 +1,4 @@
+#pragma once
 #include"HuffmanTree.h"
 #define _DEBUG_
 
@@ -76,13 +77,13 @@ public:
 		filename.erase(filename.length() - 4, 4);
 		string filenameout = filename + ".compress";
 		
-		FILE* fIn = fopen(filenameout.c_str(), "w+");
+		FILE* fIn = fopen(filenameout.c_str(), "w");
 		assert(fIn);
 		fseek(fOut, 0, SEEK_SET);
 
 		ch = fgetc(fOut);
 		unsigned char inCh = 0;
-		char index = 0;
+		int index = 0; //统计完后8-index是填补的0的个数 //写入配置文件
 		while (ch != EOF)
 		{
 			string& code = _chinfos[unsigned char(ch)]._code;
@@ -131,6 +132,10 @@ public:
 				chInfo += itoa(_chinfos[i]._count, buffer, 10);
 				chInfo += '\n';
 				fputs(chInfo.c_str(), fInconfig);
+			}
+			if (8 - index > 0)//填补0的个数
+			{
+				fputc(8-index, fInconfig);
 			}
 		}
 		fclose(fInconfig);
