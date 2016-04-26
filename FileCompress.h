@@ -1,6 +1,7 @@
 #pragma once
 #include"HuffmanTree.h"
-#define _DEBUG_
+#include <algorithm>
+//#define _DEBUG_
 
 #pragma warning(disable:4996)
 
@@ -13,22 +14,22 @@ public:
 		, _count(0)
 		, _code("")
 	{}
-	bool operator< (const Charinfo& tmp)
+	bool operator< (const Charinfo& tmp)const
 	{
 		return _count < tmp._count;
 	}
-	bool operator> (const Charinfo& tmp)
+	bool operator> (const Charinfo& tmp)const
 	{
-		return _count < tmp._count;
+		return _count > tmp._count;
 	}
-	bool operator!= (const int& tmp) const
+	bool operator!= (const Charinfo& tmp) const
 	{
-		return (_count != tmp);
+		return (_count != tmp._count);
 	}
 	Charinfo operator+ (const Charinfo& var)
 	{
-		Charinfo tmp(*this);
-		tmp._count += var._count;
+		Charinfo tmp;
+		tmp._count = _count + var._count;
 		return tmp;
 	}
 
@@ -53,37 +54,38 @@ public:
 	void Compress(string filename)
 	{
 		assert(filename.c_str());
-		FILE* fOut = fopen(filename.c_str(), "r");
+		FILE* fOut = fopen(filename.c_str(), "rb");
 		assert(fOut);
 		
 		//Step1 统计每个字符出现的个数
 		char ch = fgetc(fOut);
 		while (ch != EOF)
 		{
-			_chinfos[ch]._count++;
+			_chinfos[(unsigned char)ch]._count++;
 			ch = fgetc(fOut);
 		}
 		
 
 		//Step2 建立Huffman树
-		HuffmanTree<Charinfo> h(_chinfos, 256);
+		Charinfo invaild;
+		HuffmanTree<Charinfo> h(_chinfos, 256, invaild);
 		
 		//Step3 获取每个字符（至少出现一次的）的Huffman编码
 		HuffmanTreeNode<Charinfo>* root = h.GetRoot();
-		string code = "";
-		_GetHuffmanCode(root,code);
+		//string code = "";
+		_GenerateHuffmanCode(root);
 
 		//Step4 写入压缩文件
 		filename.erase(filename.length() - 4, 4);
 		string filenameout = filename + ".compress";
 		
-		FILE* fIn = fopen(filenameout.c_str(), "w");
+		FILE* fIn = fopen(filenameout.c_str(), "wb");
 		assert(fIn);
 		fseek(fOut, 0, SEEK_SET);
 
 		ch = fgetc(fOut);
 		unsigned char inCh = 0;
-		int index = 0; //统计完后8-index是填补的0的个数 //写入配置文件
+		int index = 0; //写入配置文件
 		while (ch != EOF)
 		{
 			string& code = _chinfos[unsigned char(ch)]._code;
@@ -119,7 +121,7 @@ public:
 
 		//Step5 写入配置文件
 		string filenamein = filename + ".config";
-		FILE* fInconfig = fopen(filenamein.c_str(), "w+");
+		FILE* fInconfig = fopen(filenamein.c_str(), "wb");
 		assert(fInconfig);
 		for (int i = 0; i < 256; i++)
 		{
@@ -133,17 +135,49 @@ public:
 				chInfo += '\n';
 				fputs(chInfo.c_str(), fInconfig);
 			}
-			if (8 - index > 0)//填补0的个数
-			{
-				fputc(8-index, fInconfig);
-			}
 		}
+		root = h.GetRoot();
+		size_t charcount = root->_weight._count;
+		char buffer[128];
+		fputs(itoa(charcount, buffer, 10), fInconfig);
+		fputc('\n', fInconfig);
 		fclose(fInconfig);
 		fclose(fIn);
 		fclose(fOut);
 	}
 private:
-	 void _GetHuffmanCode(HuffmanTreeNode<Charinfo>* root, string& code) 
+	void _GenerateHuffmanCode(HuffmanTreeNode<Charinfo>* root)
+	{
+		if (root == NULL)
+		{
+			return;
+		}
+		_GenerateHuffmanCode(root->_left);
+		_GenerateHuffmanCode(root->_right);
+
+		//如果该节点为叶子节点,则生成相应的Haffman编码
+		if (root->_left == NULL && root->_right == NULL)
+		{
+			HuffmanTreeNode<Charinfo>* cur = root;
+			HuffmanTreeNode<Charinfo>* parent = cur->_parent;
+			string& code = _chinfos[cur->_weight._ch]._code;
+			while (parent)
+			{
+				if (cur == parent->_left)
+				{
+					code += '0';
+				}
+				else
+				{
+					code += '1';
+				}
+				cur = parent;
+				parent = cur->_parent;
+			}
+			reverse(code.begin(),code.end());
+		}
+	}
+	/* void _GetHuffmanCode(HuffmanTreeNode<Charinfo>* root, string& code) 
 	{
 		if (!root->_left && !root->_right)
 		{
@@ -161,7 +195,7 @@ private:
 			code += '1';
 			_GetHuffmanCode(root->_right, code);
 		}
-	}
+	}*/
 private:
 	Charinfo _chinfos[256];
 };

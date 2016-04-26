@@ -10,13 +10,14 @@ struct HuffmanTreeNode
 {
 	HuffmanTreeNode<T>* _left;
 	HuffmanTreeNode<T>* _right;
-	//HuffmanTreeNode<T>* _parent;
+	HuffmanTreeNode<T>* _parent;
 	T _weight;
 
 	HuffmanTreeNode(const T& weight)
 		:_left(NULL)
 		, _right(NULL)
 		, _weight(weight)
+		, _parent(NULL)
 	{}
 };
 
@@ -24,7 +25,7 @@ struct HuffmanTreeNode
 template<class T>
 struct HuffmanLess
 {
-	bool operator() (const T& l, const T& r)
+	bool operator() (const HuffmanTreeNode<T>* l, HuffmanTreeNode<T>* r)
 	{
 		return l->_weight < r->_weight; 
 	}
@@ -36,12 +37,13 @@ class HuffmanTree
 	typedef HuffmanTreeNode<T> Node;
 public:
 	HuffmanTree()
+		:_root(NULL)
 	{}
-	HuffmanTree(const T* array, int size, int invalid = 0)
+	HuffmanTree(const T* array, int size, const T& invalid)
 	{
 		assert(array);
 		assert(size != 0);
-		Heap<Node*, HuffmanLess<Node*>> minHeap;
+		Heap<Node*, HuffmanLess<T>> minHeap;
 
 		for (int i = 0; i < size; i++)
 		{
@@ -63,11 +65,14 @@ public:
 			minHeap.Pop();
 			Node* right = minHeap.Top();
 			minHeap.Pop();
+
 			Node* parent = new Node(left->_weight + right->_weight);
 			parent->_left = left;
 			parent->_right = right;
-			minHeap.Push(parent);
+			left->_parent = parent;
+			right->_parent = parent;
 			_root = parent;
+			minHeap.Push(parent);
 		}
 	}
 

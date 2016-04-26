@@ -1,6 +1,6 @@
 #include<iostream>
 #include"Heap.h"
-#include"HuffmanTree.h"
+//#include"HuffmanTree.h"
 #include"FileCompress.h"
 #include"FileUncompress.h"
 
@@ -9,7 +9,8 @@ using namespace std;
 void testHuffmanHeap()
 {
 	int array[] = { 1, 5, 8, 2, 4, 3, 2, 8 };
-	HuffmanTree<int> h1(array, 8);
+	HuffmanTree<int> h1;
+	//h1(array, 7, 0);
 	h1.PrevOrder();
 }
 void testFilecompress()
